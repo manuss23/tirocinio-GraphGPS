@@ -6,7 +6,7 @@ import torch
 from scipy.stats import stats
 from sklearn.metrics import accuracy_score, precision_score, recall_score, \
     f1_score, roc_auc_score, mean_absolute_error, mean_squared_error, \
-    confusion_matrix
+    confusion_matrix, classification_report
 from sklearn.metrics import r2_score
 from torch_geometric.graphgym import get_current_gpu_usage
 from torch_geometric.graphgym.config import cfg
@@ -46,6 +46,7 @@ class CustomLogger(Logger):
         super().__init__(*args, **kwargs)
         # Whether to run comparison tests of alternative score implementations.
         self.test_scores = False
+        self.last_report = None
 
     # basic properties
     def basic(self):
@@ -121,7 +122,11 @@ class CustomLogger(Logger):
                                                 average='macro',
                                                 multi_class='ovr'))
                 assert np.isclose(sk_auc, res['auc'])
-
+        if self.name == 'test':
+            self.last_report = classification_report(
+                true, pred_int,
+                labels=torch.unique(true).tolist(),
+                digits=4, zero_division=0)
         return res
 
     def classification_multilabel(self):
