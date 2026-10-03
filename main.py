@@ -140,6 +140,10 @@ if __name__ == '__main__':
         logging.info(f"    Starting now: {datetime.datetime.now()}")
         # Set machine learning pipeline
         loaders = create_loader()
+        
+        if cfg.dataset.format == 'PyG-SocialNetwork':
+            cfg.share.dim_out = 6
+        
         loggers = create_logger()
         model = create_model()
         if cfg.pretrained.dir:
