@@ -116,6 +116,7 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
     split_names = ['val', 'test']
     full_epoch_times = []
     perf = [[] for _ in range(num_splits)]
+    best_test_report = None
     for cur_epoch in range(start_epoch, cfg.optim.max_epoch):
         start_time = time.perf_counter()
         train_epoch(loggers[0], loaders[0], model, optimizer, scheduler,
@@ -177,6 +178,10 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
                     run.log(bstats, step=cur_epoch)
                     run.summary["full_epoch_time_avg"] = np.mean(full_epoch_times)
                     run.summary["full_epoch_time_sum"] = np.sum(full_epoch_times)
+
+            if best_epoch == cur_epoch:
+                best_test_report = loggers[2].last_report
+            
             # Checkpoint the best epoch params (if enabled).
             if cfg.train.enable_ckpt and cfg.train.ckpt_best and \
                     best_epoch == cur_epoch:
@@ -209,6 +214,12 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
         run.finish()
         run = None
 
+    if best_test_report is not None:
+        logging.info(f"Classification report sul test (epoca migliore {best_epoch}:\n)"
+                     f"{best_test_report}")
+        with open(f"{cfg.run_dir}/test/classification_report.txt", "w") as f:
+            f.write(f"Epoca migliore; {best_epoch}\n\n{best_test_report}")
+    
     logging.info('Task done, results saved in %s', cfg.run_dir)
 
 
@@ -255,6 +266,12 @@ def inference_only(loggers, loaders, model, optimizer=None, scheduler=None):
         f"val_loss: {perf[1][best_epoch]['loss']:.4f} {best_val}\t"
         f"test_loss: {perf[2][best_epoch]['loss']:.4f} {best_test}"
     )
+
+    if loggers[2].last_report is not None:
+        logging.info(f"Classification report sul test:\n{loggers[2].last_report}")
+        with open(f"{cfg.run_dir}/test/classification_report.txt", "w") as f:
+            f.write(loggers[2].last_report)
+    
     logging.info(f'Done! took: {time.perf_counter() - start_time:.2f}s')
     for logger in loggers:
         logger.close()

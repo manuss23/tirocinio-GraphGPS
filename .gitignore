@@ -9,10 +9,8 @@ scripts/pcqm4m/**/*.gz
 scripts/pcqm4m/**/*.tsv
 scripts/pcqm4m/pcqm4m-v2/
 slurm_history/
-datasets/*
-!datasets/SocialNetwork/
-datasets/SocialNetwork/*
-!datasets/SocialNetwork/build_dataset.py
+datasets/Actor/
+datasets/SocialNetwork/processed/
 pretrained/
 results/
 vocprep/benchmark_RELEASE/
@@ -26,7 +24,6 @@ splits/
 wandb/
 __pycache__/
 .idea
-*.log
 *.bak
 
 # Byte-compiled / optimized / DLL files
@@ -87,7 +84,6 @@ coverage.xml
 *.pot
 
 # Django stuff:
-*.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
