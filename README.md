@@ -2,7 +2,7 @@
 
 
 
-\# GraphGPS su dataset SocialNetwork
+## GraphGPS su dataset SocialNetwork
 
 
 
@@ -12,7 +12,7 @@ alla classificazione degli utenti di un social network.
 
 
 
-\## Cosa è stato aggiunto o modificato
+### Cosa è stato aggiunto o modificato
 
 \- `datasets/SocialNetwork/build\_dataset.py`: costruzione dell'oggetto Data dai file grezzi
 
