@@ -12,7 +12,6 @@ slurm_history/
 datasets/Actor/
 datasets/SocialNetwork/processed/
 pretrained/
-results/
 vocprep/benchmark_RELEASE/
 vocprep/voc_viz_files/
 vocprep/VOC/benchmark_RELEASE/

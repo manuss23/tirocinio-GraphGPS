@@ -1,0 +1,373 @@
+[*] Updating cfg from pretrained model: results\social_network\config.yaml
+[*] Run ID 0: seed=0, split_index=0
+    Starting now: 2026-10-12 10:50:34.593804
+[*] Loaded dataset 'none' from 'PyG-SocialNetwork':
+  Data(x=[26739, 384], edge_index=[2, 1371126], y=[26739], train_mask=[26739], val_mask=[26739], test_mask=[26739])
+  undirected: True
+  num graphs: 1
+  avg num_nodes/graph: 26739
+  num node features: 384
+  num edge features: 0
+  num classes: 6
+[*] Loading from pretrained model: results\social_network\0\ckpt\332.ckpt
+GraphGymModule(
+  (model): GPSModel(
+    (encoder): FeatureEncoder(
+      (node_encoder): LinearNodeEncoder(
+        (encoder): Linear(in_features=384, out_features=64, bias=True)
+      )
+    )
+    (layers): Sequential(
+      (0): GPSLayer(
+        summary: dim_h=64, local_gnn_type=GCN, global_model_type=Performer, heads=4
+        (local_model): GCNConv(64, 64)
+        (self_attn): SelfAttention(
+          (fast_attention): FastAttention(
+            (kernel_fn): ReLU()
+          )
+          (to_q): Linear(in_features=64, out_features=256, bias=False)
+          (to_k): Linear(in_features=64, out_features=256, bias=False)
+          (to_v): Linear(in_features=64, out_features=256, bias=False)
+          (to_out): Linear(in_features=256, out_features=64, bias=True)
+          (dropout): Dropout(p=0.0, inplace=False)
+        )
+        (dropout_local): Dropout(p=0.2, inplace=False)
+        (dropout_attn): Dropout(p=0.2, inplace=False)
+        (ff_linear1): Linear(in_features=64, out_features=128, bias=True)
+        (ff_linear2): Linear(in_features=128, out_features=64, bias=True)
+        (act_fn_ff): GELU(approximate='none')
+        (ff_dropout1): Dropout(p=0.2, inplace=False)
+        (ff_dropout2): Dropout(p=0.2, inplace=False)
+      )
+      (1): GPSLayer(
+        summary: dim_h=64, local_gnn_type=GCN, global_model_type=Performer, heads=4
+        (local_model): GCNConv(64, 64)
+        (self_attn): SelfAttention(
+          (fast_attention): FastAttention(
+            (kernel_fn): ReLU()
+          )
+          (to_q): Linear(in_features=64, out_features=256, bias=False)
+          (to_k): Linear(in_features=64, out_features=256, bias=False)
+          (to_v): Linear(in_features=64, out_features=256, bias=False)
+          (to_out): Linear(in_features=256, out_features=64, bias=True)
+          (dropout): Dropout(p=0.0, inplace=False)
+        )
+        (dropout_local): Dropout(p=0.2, inplace=False)
+        (dropout_attn): Dropout(p=0.2, inplace=False)
+        (ff_linear1): Linear(in_features=64, out_features=128, bias=True)
+        (ff_linear2): Linear(in_features=128, out_features=64, bias=True)
+        (act_fn_ff): GELU(approximate='none')
+        (ff_dropout1): Dropout(p=0.2, inplace=False)
+        (ff_dropout2): Dropout(p=0.2, inplace=False)
+      )
+    )
+    (post_mp): GNNNodeHead(
+      (layer_post_mp): MLP(
+        (model): Sequential(
+          (0): Linear(
+            (model): Linear(64, 6, bias=True)
+          )
+        )
+      )
+    )
+  )
+)
+accelerator: cuda
+benchmark: False
+bn:
+  eps: 1e-05
+  mom: 0.1
+cfg_dest: config.yaml
+custom_metrics: []
+dataset:
+  cache_load: False
+  cache_save: False
+  dir: ./datasets
+  edge_dim: 128
+  edge_encoder: False
+  edge_encoder_bn: True
+  edge_encoder_name: Bond
+  edge_encoder_num_types: 0
+  edge_message_ratio: 0.8
+  edge_negative_sampling_ratio: 1.0
+  edge_train_mode: all
+  encoder: True
+  encoder_bn: True
+  encoder_dim: 128
+  encoder_name: db
+  format: PyG-SocialNetwork
+  infer_link_label: None
+  label_column: none
+  label_table: none
+  location: local
+  name: none
+  node_encoder: True
+  node_encoder_bn: False
+  node_encoder_name: LinearNode
+  node_encoder_num_types: 0
+  remove_feature: False
+  resample_disjoint: False
+  resample_negative: False
+  shuffle_split: True
+  slic_compactness: 10
+  split: [0.8, 0.1, 0.1]
+  split_dir: ./splits
+  split_index: 0
+  split_mode: standard
+  task: node
+  task_type: classification
+  to_undirected: False
+  transductive: True
+  transform: none
+  tu_simple: True
+devices: 1
+example_arg: example
+example_group:
+  example_arg: example
+gnn:
+  act: gelu
+  agg: mean
+  att_final_linear: False
+  att_final_linear_bn: False
+  att_heads: 1
+  batchnorm: True
+  clear_feature: True
+  dim_inner: 64
+  dropout: 0.2
+  head: node
+  keep_edge: 0.5
+  l2norm: True
+  layer_type: generalconv
+  layers_mp: 2
+  layers_post_mp: 1
+  layers_pre_mp: 0
+  msg_direction: single
+  normalize_adj: False
+  residual: False
+  self_msg: concat
+  skip_every: 1
+  stage_type: stack
+gpu_mem: False
+graphormer:
+  attention_dropout: 0.0
+  dropout: 0.0
+  embed_dim: 80
+  input_dropout: 0.0
+  mlp_dropout: 0.0
+  num_heads: 4
+  num_layers: 6
+  use_graph_token: True
+gt:
+  attn_dropout: 0.0
+  batch_norm: False
+  bigbird:
+    add_cross_attention: False
+    attention_type: block_sparse
+    block_size: 3
+    chunk_size_feed_forward: 0
+    hidden_act: relu
+    is_decoder: False
+    layer_norm_eps: 1e-06
+    max_position_embeddings: 128
+    num_random_blocks: 3
+    use_bias: False
+  dim_hidden: 64
+  dropout: 0.2
+  full_graph: True
+  gamma: 1e-05
+  layer_norm: False
+  layer_type: GCN+Performer
+  layers: 2
+  n_heads: 4
+  pna_degrees: []
+  residual: True
+mem:
+  inplace: False
+metric_agg: argmax
+metric_best: f1
+model:
+  edge_decoding: dot
+  graph_pooling: add
+  loss_fun: weighted_cross_entropy
+  match_upper: True
+  size_average: mean
+  thresh: 0.5
+  type: GPSModel
+name_tag: 
+num_threads: 6
+num_workers: 0
+optim:
+  base_lr: 0.0005
+  batch_accumulation: 1
+  clip_grad_norm: True
+  clip_grad_norm_value: 1.0
+  lr_decay: 0.1
+  max_epoch: 400
+  min_lr: 0.0
+  momentum: 0.9
+  num_warmup_epochs: 20
+  optimizer: adamW
+  reduce_factor: 0.1
+  schedule_patience: 10
+  scheduler: cosine_with_warmup
+  steps: [30, 60, 90]
+  weight_decay: 1e-05
+out_dir: results\social_network-inference
+posenc_ElstaticSE:
+  dim_pe: 16
+  enable: False
+  kernel:
+    times: []
+    times_func: range(10)
+  layers: 3
+  model: none
+  n_heads: 4
+  pass_as_var: False
+  post_layers: 0
+  raw_norm_type: none
+posenc_EquivStableLapPE:
+  eigen:
+    eigvec_norm: L2
+    laplacian_norm: sym
+    max_freqs: 10
+  enable: False
+  raw_norm_type: none
+posenc_GraphormerBias:
+  dim_pe: 0
+  enable: False
+  node_degrees_only: False
+  num_in_degrees: None
+  num_out_degrees: None
+  num_spatial_types: None
+posenc_HKdiagSE:
+  dim_pe: 16
+  enable: False
+  kernel:
+    times: []
+    times_func: 
+  layers: 3
+  model: none
+  n_heads: 4
+  pass_as_var: False
+  post_layers: 0
+  raw_norm_type: none
+posenc_LapPE:
+  dim_pe: 16
+  eigen:
+    eigvec_norm: L2
+    laplacian_norm: sym
+    max_freqs: 10
+  enable: False
+  layers: 3
+  model: none
+  n_heads: 4
+  pass_as_var: False
+  post_layers: 0
+  raw_norm_type: none
+posenc_RWSE:
+  dim_pe: 16
+  enable: False
+  kernel:
+    times: []
+    times_func: 
+  layers: 3
+  model: none
+  n_heads: 4
+  pass_as_var: False
+  post_layers: 0
+  raw_norm_type: none
+posenc_SignNet:
+  dim_pe: 16
+  eigen:
+    eigvec_norm: L2
+    laplacian_norm: sym
+    max_freqs: 10
+  enable: False
+  layers: 3
+  model: none
+  n_heads: 4
+  pass_as_var: False
+  phi_hidden_dim: 64
+  phi_out_dim: 4
+  post_layers: 0
+  raw_norm_type: none
+pretrained:
+  dir: results\social_network
+  freeze_main: False
+  reset_prediction_head: False
+print: both
+round: 5
+run_dir: results\social_network-inference\0
+run_id: 0
+run_multiple_splits: []
+seed: 0
+share:
+  dim_in: 384
+  dim_out: 6
+  num_splits: 3
+tensorboard_agg: True
+tensorboard_each_run: False
+train:
+  auto_resume: False
+  batch_size: 16
+  ckpt_best: True
+  ckpt_clean: True
+  ckpt_period: 100
+  enable_ckpt: True
+  epoch_resume: -1
+  eval_period: 1
+  iter_per_epoch: 32
+  mode: inference-only
+  neighbor_sizes: [20, 15, 10, 5]
+  node_per_graph: 32
+  radius: extend
+  sample_node: False
+  sampler: full_batch
+  skip_train_eval: False
+  walk_length: 4
+val:
+  node_per_graph: 32
+  radius: extend
+  sample_node: False
+  sampler: full_batch
+view_emb: False
+wandb:
+  entity: gtransformers
+  name: 
+  project: gtblueprint
+  use: False
+Num parameters: 197702
+train: {'epoch': 0, 'time_epoch': 1.03254, 'eta': 411.98273, 'eta_hours': 0.11444, 'loss': 1.19134271, 'lr': 0, 'params': 197702, 'time_iter': 1.03254, 'accuracy': 0.5339, 'f1': 0.44487, 'auc': 0.83385}
+...computing epoch stats took: 0.16s
+val: {'epoch': 0, 'time_epoch': 0.0681, 'loss': 1.26449966, 'lr': 0, 'params': 197702, 'time_iter': 0.0681, 'accuracy': 0.50972, 'f1': 0.41826, 'auc': 0.81195}
+...computing epoch stats took: 0.08s
+test: {'epoch': 0, 'time_epoch': 0.06438, 'loss': 1.26517308, 'lr': 0, 'params': 197702, 'time_iter': 0.06438, 'accuracy': 0.49244, 'f1': 0.41324, 'auc': 0.81092}
+...computing epoch stats took: 0.04s
+> Inference | train_loss: 1.1913 train_f1: 0.4449	val_loss: 1.2645 val_f1: 0.4183	test_loss: 1.2652 test_f1: 0.4132
+Classification report sul test:
+              precision    recall  f1-score   support
+
+           0     0.5062    0.5009    0.5035       575
+           1     0.6187    0.6354    0.6269      1481
+           2     0.3715    0.4450    0.4049       854
+           3     0.3469    0.2807    0.3103       456
+           4     0.3725    0.1845    0.2468       206
+           5     0.4068    0.3692    0.3871       130
+
+    accuracy                         0.4924      3702
+   macro avg     0.4371    0.4026    0.4132      3702
+weighted avg     0.4896    0.4924    0.4880      3702
+MAE:  0.6891
+RMSE: 1.0791
+                precision    recall  f1-score   support
+
+0 (classi 0-2)     0.8657    0.9261    0.8949      2910
+1 (classi 3-5)     0.6350    0.4722    0.5416       792
+
+      accuracy                         0.8290      3702
+     macro avg     0.7503    0.6992    0.7183      3702
+  weighted avg     0.8164    0.8290    0.8193      3702
+
+Done! took: 1.45s
+Results aggregated across runs saved in results\social_network-inference\agg
+[*] All done: 2026-10-12 10:50:36.821784

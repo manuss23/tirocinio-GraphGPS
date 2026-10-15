@@ -1,5 +1,5 @@
 import torch
-from torch_geometric.utils import remove_self_loops, to_undirected
+from torch_geometric.utils import remove_self_loops, to_undirected, coalesce
 import pandas as pd
 from sentence_transformers import SentenceTransformer
 from sklearn.model_selection import train_test_split
@@ -40,11 +40,30 @@ print(f"Mappatura completata. Trovati {len(nodes_mapping)} nodi univoci.")
 edge_index = torch.tensor([sources, targets], dtype=torch.long)
 print(f"Tensore edge_index generato con forma: {edge_index.shape}")
 
-# Pulizia archi
+# Pulizia relazioni
 edge_index, _ = remove_self_loops(edge_index)
-edge_index = to_undirected(edge_index)
-print(f"edge_index dopo la pulizia: {edge_index.shape}")
+edge_index = coalesce(edge_index)
+num_relations = edge_index.size(1)
+print(f"Relazioni uniche dopo la pulizia: {num_relations}")
 
+# Versione non orientata
+edge_index_undirected = to_undirected(edge_index)
+print(f"edge_index non orientato: {edge_index_undirected.shape}")
+
+# Versione orientata con tipi
+follower = edge_index[0]
+followed = edge_index[1]
+
+edge_index_segue = torch.stack([followed, follower])
+edge_index_seguito = torch.stack([follower, followed])
+edge_index_directed = torch.cat([edge_index_segue, edge_index_seguito], dim=1)
+
+edge_attr_segue = torch.zeros(num_relations, dtype=torch.long)
+edge_attr_seguito = torch.ones(num_relations, dtype=torch.long)
+edge_attr_directed = torch.cat([edge_attr_segue, edge_attr_seguito])
+
+print(f"edge_index orientato: {edge_index_directed.shape}")
+print(f"edge_attr orientato: {edge_attr_directed.shape}")
 
 # Estrazione dei testi e raggruppamento testi per nodo
 tsv_directory = "datasets/SocialNetwork/raw/real_posts.tsv"
@@ -129,24 +148,35 @@ print(f"Train: {train_mask.sum().item()}    Val: {val_mask.sum().item()}    Test
 
 
 # Assemblaggio oggetto Data
-data = Data(x=x, edge_index=edge_index, y=y, train_mask=train_mask, val_mask=val_mask, test_mask=test_mask)
+data = Data(x=x, edge_index=edge_index_undirected, y=y, train_mask=train_mask, val_mask=val_mask, test_mask=test_mask)
 
-print("\nOggetto Data finale:")
+data_directed = Data(x=x, edge_index=edge_index_directed, edge_attr=edge_attr_directed, y=y, train_mask=train_mask, val_mask=val_mask, test_mask=test_mask)
+
+print("\nOggetto Data non orientato:")
 print(data)
+print("\nOggetto Data orientato:")
+print(data_directed)
 
 
 # Controlli
 data.validate(raise_on_error=True)
+data_directed.validate(raise_on_error=True)
+
 print(f"Grafo non orientato: {data.is_undirected()}")
 print(f"Self-loop presenti: {data.has_self_loops()}")
 print(f"Nodi isolati presenti: {data.has_isolated_nodes()}")
 
-assert not (train_mask & val_mask).any() and not (train_mask & test_mask).any() and not (val_mask & test_mask).any(), "Le mask si sovrappongono!"
-assert (y[train_mask | val_mask | test_mask] != -1).all(), "Nodi senza label nelle mask!"
+assert not (train_mask & val_mask).any() and not (train_mask & test_mask).any() and not (val_mask & test_mask).any(), "Le mask si sovrappongono"
+assert (y[train_mask | val_mask | test_mask] != -1).all(), "Nodi senza label nelle mask"
+assert data_directed.edge_attr.size(0) == data_directed.edge_index.size(1), "edge_attr non allineato a edge_index"
+assert (data_directed.edge_attr == 0).sum() == (data_directed.edge_attr == 1).sum(), "Numero di archi per tipo diverso"
 print("Controlli superati.")
 
-
-# Salvataggio grafo
+# Salvataggio grafi
 output_path = "datasets/SocialNetwork/processed_graph.pt"
 torch.save(data, output_path)
-print(f"Grafo salvato in {output_path}")
+print(f"Grafo non orientato salvato in {output_path}")
+
+output_path_directed = "datasets/SocialNetwork/processed_graph_directed.pt"
+torch.save(data_directed, output_path_directed)
+print(f"Grafo orientato salvato in {output_path_directed}")
