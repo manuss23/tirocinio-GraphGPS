@@ -16,6 +16,8 @@ class SocialNetwork(InMemoryDataset):
     def processed_file_names(self):
         if self.name == 'directed':
             return ['data_directed.pt']
+        elif self.name == 'directed-cv':
+            return ['data_directed_cv.pt']
         return ['data.pt']
 
     def download(self):
@@ -26,6 +28,8 @@ class SocialNetwork(InMemoryDataset):
     def process(self):
         if self.name == 'directed':
             graph_path = osp.join(self.root, 'processed_graph_directed.pt')
+        elif self.name == 'directed-cv':
+            graph_path = osp.join(self.root, 'processed_graph_directed_cv.pt')
         else:
             graph_path = osp.join(self.root, 'processed_graph.pt')
 
