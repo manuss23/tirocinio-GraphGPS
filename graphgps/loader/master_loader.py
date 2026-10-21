@@ -142,7 +142,7 @@ def load_dataset_master(format, name, dataset_dir):
             dataset = preformat_COCOSuperpixels(dataset_dir, name,
                                                 cfg.dataset.slic_compactness)
         elif pyg_dataset_id == 'SocialNetwork':
-            if name not in ['none', 'directed', 'directed-cv']:
+            if name not in ['none', 'directed', 'directed-cv'] and not name.startswith(('r-', 'rs-')):
                 raise ValueError(f"SocialNetwork: name '{name}' non valido, usa 'none' o 'directed'")
             dataset = SocialNetwork(dataset_dir, name)
         else:

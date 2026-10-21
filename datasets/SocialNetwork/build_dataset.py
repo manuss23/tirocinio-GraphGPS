@@ -4,35 +4,11 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer
 from sklearn.model_selection import train_test_split
 from torch_geometric.data import Data
+from utils import read_edges
 
-# Inizializzazione strutture dati
-nodes_mapping = {}
-current_index = 0
-sources = []
-targets = []
-
-edg_directory = "datasets/SocialNetwork/raw/real_social_network.edg"
 
 # Lettura topologia e mappatura nodi
-with open(edg_directory, "r") as f:
-    for line in f:
-        parts = line.strip().split()
-        if len(parts) != 2:
-            continue
-
-        source_node, target_node = parts
-
-        if source_node not in nodes_mapping:
-            nodes_mapping[source_node] = current_index
-            current_index += 1
-
-        if target_node not in nodes_mapping:
-            nodes_mapping[target_node] = current_index
-            current_index += 1
-
-        sources.append(nodes_mapping[source_node])
-        targets.append(nodes_mapping[target_node])
-
+nodes_mapping, sources, targets = read_edges()
 print(f"Mappatura completata. Trovati {len(nodes_mapping)} nodi univoci.")
 
 

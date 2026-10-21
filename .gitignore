@@ -21,6 +21,14 @@ vocprep/VOC/*.pkl
 vocprep/VOC/*.zip
 splits/
 wandb/
+
+# SocialNetwork: file rigenerabili dagli script
+datasets/SocialNetwork/raw/
+datasets/SocialNetwork/*.pt
+datasets/SocialNetwork/user_classification/
+results/**/ckpt/
+results/**/events.out.tfevents.*
+
 __pycache__/
 .idea
 *.bak

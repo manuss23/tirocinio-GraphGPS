@@ -18,6 +18,8 @@ class SocialNetwork(InMemoryDataset):
             return ['data_directed.pt']
         elif self.name == 'directed-cv':
             return ['data_directed_cv.pt']
+        elif self.name.startswith(('r-', 'rs-')):
+            return [f'data_{self.name}.pt']
         return ['data.pt']
 
     def download(self):
@@ -30,6 +32,11 @@ class SocialNetwork(InMemoryDataset):
             graph_path = osp.join(self.root, 'processed_graph_directed.pt')
         elif self.name == 'directed-cv':
             graph_path = osp.join(self.root, 'processed_graph_directed_cv.pt')
+        elif self.name.startswith(('r-', 'rs-')):
+            setting, percentage = self.name.split('-')
+            graph_path = osp.join(self.root, 'user_classification',
+                                  f'percented_train_{setting}',
+                                  f'{percentage}_perc', 'graph_directed.pt')
         else:
             graph_path = osp.join(self.root, 'processed_graph.pt')
 
