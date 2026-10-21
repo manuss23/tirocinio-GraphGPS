@@ -1,34 +1,71 @@
-# GraphGPS: General Powerful Scalable Graph Transformers
+# GraphGPS su dataset SocialNetwork
 
+Progetto di tirocinio: adattamento di [GraphGPS](https://github.com/rampasek/GraphGPS)
+alla classificazione degli utenti di un social network in 6 classi.
+La documentazione completa è in `docs/Documentazione.pdf`.
 
+## Ambiente
+Testato con Python 3.10, PyTorch 2.8 (CUDA 12.8) e PyG 2.6.1, ambiente conda `graphgps`.
 
-## GraphGPS su dataset SocialNetwork
+## Dati
+I dati **non sono inclusi** nel repository. Vanno copiati a mano in `datasets/SocialNetwork/raw/`:
+- `real_social_network.edg`: archi "utente A segue utente B"
+- `real_users_labels.tsv`: etichetta di ogni utente
+- `real_posts.tsv`: post degli utenti
 
+## Preparazione dei dati
+Gli script vanno lanciati **in ordine**, dalla radice del progetto.
+Ognuno usa l'output del precedente.
 
+| # | Comando | Cosa produce |
+|---|---|---|
+| 1 | `python datasets/SocialNetwork/build_dataset.py` | `processed_graph.pt` (non orientato) e `processed_graph_directed.pt` (orientato), con split 70/15/15 |
+| 2 | `python datasets/SocialNetwork/build_cv_splits.py` | `processed_graph_directed_cv.pt`: 10 fold stratificati |
+| 3 | `python datasets/SocialNetwork/export_cv_folds.py` | `user_classification/cross_validation/fold_k/`: i 10 fold in TSV (train 90%, test 10%) |
+| 4 | `python datasets/SocialNetwork/percentage_split.py` | `user_classification/percented_train_r/{80,60,40,20}_perc/`: train ridotto alla percentuale del totale, test invariato |
+| 5 | `python datasets/SocialNetwork/build_percentage_masks.py` | `graph_directed.pt` in ogni cartella `{p}_perc`, con validation ricavata dal 20% del train |
 
-Progetto di tirocinio: adattamento di \[GraphGPS](https://github.com/rampasek/GraphGPS)
+`utils.py` contiene le funzioni comuni (lettura degli archi) e non va lanciato.
 
-alla classificazione degli utenti di un social network.
+## Esperimenti
+Ogni esperimento ha il suo yaml in `configs/GPS/SocialNetwork/`, diviso per fase:
 
+| Cartella | Yaml | Cosa verifica | Richiede lo step | Lancio |
+|---|---|---|---|---|
+| `1_models` | `01_undirected_gcn` | baseline: grafo non orientato, GCN | 1 | singolo |
+| | `01_undirected_gcn_inference` | rivaluta il checkpoint di 01 | 1 + run di 01 | singolo |
+| | `02_directed_gine` | grafo orientato con archi tipizzati, GINE | 1 | `--repeat 3` |
+| | `03_directed_bn` | 02 + batch norm | 1 | `--repeat 3` |
+| `2_crossval` | `04_crossval` | 03 in 10-fold CV, lr 0.0005 | 2 | singolo (10 fold) |
+| | `05_crossval_lr1e-3` | lr 0.001 (**configurazione scelta**) | 2 | singolo (10 fold) |
+| | `06_crossval_dropout0.3` | dropout 0.3 | 2 | singolo (10 fold) |
+| `3_r_percentage` | `07_r80` … `10_r20` *(in preparazione)* | config di 05 con train all'80/60/40/20% | 5 | singolo (10 fold) |
 
+Lancio di un esperimento:
+```bash
+conda activate graphgps
+python main.py --cfg configs/GPS/SocialNetwork/2_crossval/05_crossval_lr1e-3.yaml
+```
 
-### Cosa è stato aggiunto o modificato
+Per gli esperimenti con `--repeat 3` (stesso split, 3 seed diversi):
+```bash
+python main.py --cfg configs/GPS/SocialNetwork/1_models/03_directed_bn.yaml --repeat 3
+```
 
-\- `datasets/SocialNetwork/build\_dataset.py`: costruzione dell'oggetto Data dai file grezzi
+Gli esperimenti della fase 2 e 3 **non** usano `--repeat`: i 10 fold vengono eseguiti
+automaticamente grazie a `run_multiple_splits` nello yaml (le due opzioni non sono compatibili).
 
-\- `graphgps/loader/dataset/social\_network.py`: classe InMemoryDataset
+I risultati vanno in `results/<nome yaml>/`. Media e deviazione standard sui fold sono in `agg/test/best.json`.
 
-\- `graphgps/loader/master\_loader.py`: registrazione del dataset
+> **Nota:** al primo lancio GraphGPS salva una copia dei dati in `datasets/SocialNetwork/processed/`.
+> Se rigeneri un `.pt` con gli script, cancella il file corrispondente in `processed/`,
+> altrimenti continua a usare quello vecchio.
 
-\- `configs/GPS/social\_network.yaml`: configurazione dell'esperimento
+### File modificati rispetto a GraphGPS originale
+- `graphgps/loader/dataset/social_network.py`: classe del dataset
+- `graphgps/loader/master_loader.py`: registrazione del dataset `PyG-SocialNetwork`
 
-
-
-I dati non sono inclusi nel repository.
-
-
-
-\---
+---
 
 
 
