@@ -2,6 +2,7 @@ import logging
 import time
 
 import numpy as np
+import pandas as pd
 import torch
 from scipy.stats import stats
 from sklearn.metrics import accuracy_score, precision_score, recall_score, \
@@ -17,6 +18,17 @@ from torchmetrics.functional import auroc
 import graphgps.metrics_ogb as metrics_ogb
 from graphgps.metric_wrapper import MetricWrapper
 
+
+def report_to_table(true, pred, labels, target_names=None):
+    report = classification_report(true, pred, labels=labels, target_names=target_names,
+                                   output_dict=True, zero_division=0)
+    accuracy = report.pop("accuracy", None)
+
+    table = pd.DataFrame(report).transpose()
+    if accuracy is not None:
+        table.loc["accuracy"] = [None, None, accuracy, len(true)]
+    table["support"] = table["support"].astype(int)
+    return table.round(4)
 
 def accuracy_SBM(targets, pred_int):
     """Accuracy eval for Benchmarking GNN's PATTERN and CLUSTER datasets.
@@ -47,6 +59,7 @@ class CustomLogger(Logger):
         # Whether to run comparison tests of alternative score implementations.
         self.test_scores = False
         self.last_report = None
+        self.last_tables = None
 
     # basic properties
     def basic(self):
@@ -144,6 +157,14 @@ class CustomLogger(Logger):
                 f"MAE:  {mae:.4f}\n"
                 f"RMSE: {rmse:.4f}\n"
                 f"{report_bin}")
+
+            self.last_tables = {
+                "classi": report_to_table(true, pred_int, labels=torch.unique(true).tolist()),
+                "binario": report_to_table(true_bin, pred_bin, labels=[0, 1],
+                                           target_names=['0 (classi 0-2)', '1 (classi 3-5)']),
+                "errori": pd.DataFrame({"Valore": [round(mae, 4), round(rmse, 4)]}, index=["MAE", "RMSE"])
+            }
+
         return res
 
     def classification_multilabel(self):

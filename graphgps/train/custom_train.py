@@ -2,6 +2,7 @@ import logging
 import time
 
 import numpy as np
+import pandas as pd
 import torch
 from torch_geometric.graphgym.checkpoint import load_ckpt, save_ckpt, clean_ckpt
 from torch_geometric.graphgym.config import cfg
@@ -12,6 +13,12 @@ from torch_geometric.graphgym.utils.epoch import is_eval_epoch, is_ckpt_epoch
 from graphgps.loss.subtoken_prediction_loss import subtoken_cross_entropy
 from graphgps.utils import cfg_to_dict, flatten_dict, make_wandb_name
 
+
+def save_report_excel(tables, path):
+    with pd.ExcelWriter(path) as writer:
+        tables["classi"].to_excel(writer, sheet_name="Classi")
+        tables["binario"].to_excel(writer, sheet_name="Binario")
+        tables["errori"].to_excel(writer, sheet_name="Errori")
 
 def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation):
     model.train()
@@ -117,6 +124,7 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
     full_epoch_times = []
     perf = [[] for _ in range(num_splits)]
     best_test_report = None
+    best_test_tables = None
     for cur_epoch in range(start_epoch, cfg.optim.max_epoch):
         start_time = time.perf_counter()
         train_epoch(loggers[0], loaders[0], model, optimizer, scheduler,
@@ -181,6 +189,7 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
 
             if best_epoch == cur_epoch:
                 best_test_report = loggers[2].last_report
+                best_test_tables = loggers[2].last_tables
             
             # Checkpoint the best epoch params (if enabled).
             if cfg.train.enable_ckpt and cfg.train.ckpt_best and \
@@ -215,10 +224,10 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
         run = None
 
     if best_test_report is not None:
-        logging.info(f"Classification report sul test (epoca migliore {best_epoch}:\n)"
+        logging.info(f"Classification report sul test (epoca migliore {best_epoch}):\n"
                      f"{best_test_report}")
-        with open(f"{cfg.run_dir}/test/classification_report.txt", "w") as f:
-            f.write(f"Epoca migliore; {best_epoch}\n\n{best_test_report}")
+        best_test_tables["errori"].loc["Epoca migliore"] = best_epoch
+        save_report_excel(best_test_tables, f"{cfg.run_dir}/test/classification_report.xlsx")
     
     logging.info('Task done, results saved in %s', cfg.run_dir)
 
@@ -269,8 +278,7 @@ def inference_only(loggers, loaders, model, optimizer=None, scheduler=None):
 
     if loggers[2].last_report is not None:
         logging.info(f"Classification report sul test:\n{loggers[2].last_report}")
-        with open(f"{cfg.run_dir}/test/classification_report.txt", "w") as f:
-            f.write(loggers[2].last_report)
+        save_report_excel(loggers[2].last_tables, f"{cfg.run_dir}/test/classification_report.xlsx")
     
     logging.info(f'Done! took: {time.perf_counter() - start_time:.2f}s')
     for logger in loggers:

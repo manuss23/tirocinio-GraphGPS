@@ -6,7 +6,7 @@ percentages = [80, 60, 40, 20]   #2,4,8,16, 5, 10, 20, 30, 40, 50, 60
 folds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 label_key = "label"     # "label"
 id_key = "account_id"   # "account_id"
-setting = "r"    # ["r", "rs", "s"]
+setting = "rs"    # ["r", "rs", "s"]
 BASE_DIR = "datasets/SocialNetwork/user_classification"
 
 for percentage in percentages:
@@ -27,11 +27,10 @@ for percentage in percentages:
             )
             percented_train_df = reduced_real
         elif setting == "rs":
-            synthetic_df = pd.read_csv("datasets/SocialNetwork/raw/synthetic_posts.tsv", sep="\t")
-            synthetic_df = synthetic_df.drop(columns=[c for c in synthetic_df.columns if c not in ["account_id", "id", "content", "exact_level_found"]])
+            synthetic_df = pd.read_csv("datasets/SocialNetwork/raw/synthetic_users_labels.tsv", sep="\t", dtype={"account_id": str})
 
             train_dir = os.path.join(BASE_DIR, "percented_train_r", f"{percentage}_perc", "cross_validation", f"fold_{fold}")
-            train_df = pd.read_csv(os.path.join(train_dir, "train.tsv"), sep="\t")
+            train_df = pd.read_csv(os.path.join(train_dir, "train.tsv"), sep="\t", dtype={"account_id": str})
             percented_train_df = pd.concat([train_df, synthetic_df], ignore_index=True)
         else:
             raise ValueError("Invalid setting: must either be 'r' or 'rs'")
