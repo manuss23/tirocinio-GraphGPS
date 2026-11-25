@@ -26,7 +26,7 @@ def parse_rows(lines):
     return pd.DataFrame.from_dict(rows, orient="index", columns=["precision", "recall", "f1-score", "support"])
 
 
-for txt_path in glob.glob(os.path.join(RESULTS_DIR, "*", "*", "test", "classification_report.txt")):
+for txt_path in glob.glob(os.path.join(RESULTS_DIR, "*", "*", "*", "test", "classification_report.txt")):
     with open(txt_path, "r") as f:
         lines = f.read().splitlines()
 

@@ -26,6 +26,8 @@ wandb/
 datasets/SocialNetwork/raw/
 datasets/SocialNetwork/*.pt
 datasets/SocialNetwork/user_classification/
+datasets/SocialNetwork/graphs/
+docs/~*
 results/**/ckpt/
 results/**/events.out.tfevents.*
 

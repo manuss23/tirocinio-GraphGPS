@@ -2,89 +2,112 @@
 
 Progetto di tirocinio: adattamento di [GraphGPS](https://github.com/rampasek/GraphGPS)
 alla classificazione degli utenti di un social network in 6 classi.
+Gli esperimenti principali sono in **setting induttivo** (rete di train e rete di test separate);
+quelli in setting trasduttivo (rete unica) sono mantenuti solo come confronto.
 La documentazione completa è in `docs/Documentazione.pdf`.
 
 ## Ambiente
 Testato con Python 3.10, PyTorch 2.8 (CUDA 12.8) e PyG 2.6.1, ambiente conda `graphgps`.
 
 ## Dati
-I dati **non sono inclusi** nel repository. Vanno copiati a mano:
+I dati **non sono inclusi** nel repository e non vanno caricati su GitHub. Vanno copiati a mano:
 
 In `datasets/SocialNetwork/raw/`:
 - `real_social_network.edg`, `real_users_labels.tsv`, `real_posts.tsv`: dataset reale
 - `synthetic_social_network.edg`, `synthetic_users_labels.tsv`, `synthetic_posts.tsv`: dataset sintetico
 
-In `datasets/SocialNetwork/user_classification/tutor/`: il dataset percentuale fornito dal tutor
+In `datasets/SocialNetwork/user_classification/percentages_8_64/`: il dataset a percentuali ridotte (lp, train all'8/16/32/64%)
 (`percented_train_r/`, `percented_train_rs/`, `percented_train_rs_percented_s_50/`).
-Il file `real_and_synthetic_posts.tsv` (legenda del tensore `post_bert_embeddings.pt`) va indicato
-nella variabile `TUTOR_THESIS_DIR` di `build_bert_user_embeddings.py` e `check_alignment.py`.
+Il percorso del file `real_and_synthetic_posts.tsv` (legenda del tensore `post_bert_embeddings.pt`)
+va indicato nella variabile `BERT_SOURCE_DIR` di `07_build_bert_user_embeddings.py` e `check_alignment.py`.
 
 ## Preparazione dei dati
-Gli script vanno lanciati **in ordine**, dalla radice del progetto.
-Ognuno usa l'output del precedente.
+Gli script sono in `datasets/SocialNetwork/scripts/` e vanno lanciati **dalla cartella principale del progetto**,
+ad esempio:
+```bash
+python datasets/SocialNetwork/scripts/01_build_dataset.py
+```
+I grafi completi vengono salvati in `datasets/SocialNetwork/graphs/`, split e reti per fold in
+`datasets/SocialNetwork/user_classification/`.
 
-| # | Comando | Cosa produce |
+| Ordine | Script | Cosa produce |
 |---|---|---|
-| 1 | `python datasets/SocialNetwork/build_dataset.py` | `processed_graph.pt` (non orientato) e `processed_graph_directed.pt` (orientato), con split 70/15/15 |
-| 2 | `python datasets/SocialNetwork/build_cv_splits.py` | `processed_graph_directed_cv.pt`: 10 fold stratificati |
-| 3 | `python datasets/SocialNetwork/export_cv_folds.py` | `user_classification/cross_validation/fold_k/`: i 10 fold in TSV (train 90%, test 10%) |
-| 4 | `python datasets/SocialNetwork/percentage_split.py` (`setting = "r"`) | `user_classification/percented_train_r/{80,60,40,20}_perc/`: train ridotto alla percentuale del totale |
-| 5 | `python datasets/SocialNetwork/build_percentage_masks.py` (`setting = "r"`) | `graph_directed.pt` in ogni cartella `{p}_perc`, con validation dal 20% del train |
-| 6 | `python datasets/SocialNetwork/build_dataset_rs.py` | `processed_graph_directed_rs.pt`: grafo reale + utenti sintetici |
-| 7 | `python datasets/SocialNetwork/percentage_split.py` (`setting = "rs"`) | `user_classification/percented_train_rs/{p}_perc/`: train ridotto + tutti i sintetici |
-| 8 | `python datasets/SocialNetwork/build_percentage_masks.py` (`setting = "rs"`) | `graph_directed.pt` rs, validation solo dai reali |
-| 9 | `python datasets/SocialNetwork/build_bert_user_embeddings.py` | `user_classification/tutor/users_bert_embs_rs.pt`: embedding BERT di reali e sintetici |
-| 10 | `python datasets/SocialNetwork/build_tutor_graphs.py` | `graph_directed.pt` per ogni setting, percentuale e fold del dataset del tutor (rete completa) |
+| 1 | `01_build_dataset.py` | `graphs/processed_graph.pt` (non orientato) e `graphs/processed_graph_directed.pt` (orientato, archi tipizzati) |
+| 2 | `02_build_cv_splits.py` | `graphs/processed_graph_directed_cv.pt`: 10 fold stratificati |
+| 3 | `03_export_cv_folds.py` | `user_classification/cross_validation/fold_k/`: i 10 fold in TSV (train 90%, test 10%) |
+| 4 | `04_percentage_split.py` con `setting = "r"` | `user_classification/percented_train_r/{80,60,40,20}_perc/`: train ridotto |
+| 5 | `06_build_percentage_masks.py` con `setting = "r"` | `graph_directed.pt` in ogni cartella `{p}_perc`, validation dal 20% del train |
+| 6 | `05_build_dataset_rs.py` | `graphs/processed_graph_directed_rs.pt`: grafo reale + utenti sintetici |
+| 7 | `04_percentage_split.py` con `setting = "rs"` | `user_classification/percented_train_rs/{p}_perc/`: train ridotto + tutti i sintetici |
+| 8 | `06_build_percentage_masks.py` con `setting = "rs"` | `graph_directed.pt` rs, validation solo dai reali |
+| 9 | `07_build_bert_user_embeddings.py` | `user_classification/percentages_8_64/users_bert_embs_rs.pt`: embedding BERT di reali e sintetici |
+| 10 | `08_build_lp_graphs.py` | grafo con la rete completa per ogni fold del dataset lp (solo esperimenti trasduttivi) |
+| 11 | `09_build_inductive_cv.py` | `cross_validation/fold_k/graphs.pt`: rete di train e rete di test di ogni fold |
+| 12 | `10_build_inductive_percentages.py` | `graphs.pt` per ogni percentuale e fold, setting r e rs |
+| 13 | `11_build_inductive_lp.py` | `graphs.pt` per ogni setting, percentuale e fold del dataset lp |
 
 `utils.py` contiene le funzioni comuni e non va lanciato.
 `check_alignment.py` (facoltativo) verifica che `real_and_synthetic_posts.tsv` sia la legenda corretta del tensore BERT.
-`convert_reports.py` converte in Excel i report testuali degli esperimenti eseguiti prima del report in `.xlsx`.
+`convert_reports.py` (nella cartella principale) converte in Excel i report testuali degli esperimenti
+eseguiti prima del report in `.xlsx` (cerca i file in `results/<setting>/<esperimento>/<fold>/test/`).
 
 ## Esperimenti
-Ogni esperimento ha il suo yaml in `configs/GPS/SocialNetwork/`, diviso per fase:
+Le configurazioni sono in `configs/GPS/SocialNetwork/`, divise per setting e per fase.
+I risultati vanno in `results/inductive/<nome yaml>/` o `results/transductive/<nome yaml>/`.
 
-| Cartella | Yaml | Cosa verifica | Richiede lo step | Lancio |
-|---|---|---|---|---|
-| `1_models` | `01_undirected_gcn` | baseline: grafo non orientato, GCN | 1 | singolo |
-| | `01_undirected_gcn_inference` | rivaluta il checkpoint di 01 | 1 + run di 01 | singolo |
-| | `02_directed_gine` | grafo orientato con archi tipizzati, GINE | 1 | `--repeat 3` |
-| | `03_directed_bn` | 02 + batch norm | 1 | `--repeat 3` |
-| `2_crossval` | `04_crossval` | 03 in 10-fold CV, lr 0.0005 | 2 | singolo (10 fold) |
-| | `05_crossval_lr1e-3` | lr 0.001 (**configurazione scelta**) | 2 | singolo (10 fold) |
-| | `06_crossval_dropout0.3` | dropout 0.3 | 2 | singolo (10 fold) |
-| `3_r_percentage` | `07_r80` … `10_r20` | config di 05 con train all'80/60/40/20% | 5 | singolo (10 fold) |
-| `4_rs_percentage` | `11_rs80` … `14_rs20` | come 07–10, con tutti gli utenti sintetici nel train | 8 | singolo (10 fold) |
-| `5_tutor` | `15_tutor_r8` … `18_tutor_r64` | dataset del tutor, soli reali, 8/16/32/64% | 10 | singolo (10 fold) |
-| | `19_tutor_rs8` … `22_tutor_rs64` | dataset del tutor, reali + 100% sintetici | 10 | singolo (10 fold) |
-| | `23_tutor_rs50_8` … `26_tutor_rs50_64` | dataset del tutor, reali + 50% sintetici | 10 | singolo (10 fold) |
+### Setting induttivo (`inductive/`)
+| Cartella | Yaml | Cosa verifica | Richiede |
+|---|---|---|---|
+| `2_crossval` | `04_crossval`, `05_crossval_lr1e-3`, `06_crossval_dropout0.3` | lr 0.0005 / 0.001, dropout 0.3 (**05 è la configurazione scelta**) | 11 |
+| `3_r_percentage` | `07_r80` … `10_r20` | config di 05 con train all'80/60/40/20% | 12 |
+| `4_rs_percentage` | `11_rs80` … `14_rs20` | come 07–10, con tutti gli utenti sintetici nel train | 12 |
+| `5_percentages_8_64` | `15_lp_r8` … `18_lp_r64` | dataset lp, soli reali, 8/16/32/64% | 13 |
+| | `19_lp_rs8` … `22_lp_rs64` | dataset lp, reali + 100% sintetici | 13 |
+| | `23_lp_rs50_8` … `26_lp_rs50_64` | dataset lp, reali + 50% sintetici | 13 |
 
-Lancio di un esperimento:
+Nei nomi dei dataset induttivi compare il prefisso `ind-` (ad esempio `name: ind-lp-r-8`):
+train e validation usano solo la rete di train, il test solo la rete di test.
+
+### Setting trasduttivo (`transductive/`, solo confronto)
+| Cartella | Yaml | Cosa verifica | Richiede |
+|---|---|---|---|
+| `1_models` | `01_undirected_gcn`, `01_undirected_gcn_inference` | baseline: grafo non orientato, GCN | 1 |
+| | `02_directed_gine`, `03_directed_bn` | grafo orientato con GINE, poi batch norm (`--repeat 3`) | 1 |
+| `2_crossval` | `04` … `06` | come in induttivo, su rete unica | 2 |
+| `3_r_percentage` | `07_r80` … `10_r20` | train ridotto | 5 |
+| `4_rs_percentage` | `11_rs80` … `14_rs20` | train ridotto + sintetici | 8 |
+| `5_percentages_8_64` | `15_lp_r8` … `22_lp_rs64` | dataset lp su rete completa (rs50 non eseguito) | 10 |
+
+### Lancio
+Un esperimento:
 ```bash
 conda activate graphgps
-python main.py --cfg configs/GPS/SocialNetwork/2_crossval/05_crossval_lr1e-3.yaml
+python main.py --cfg configs/GPS/SocialNetwork/inductive/2_crossval/05_crossval_lr1e-3.yaml
 ```
 
-Per gli esperimenti con `--repeat 3` (stesso split, 3 seed diversi):
-```bash
-python main.py --cfg configs/GPS/SocialNetwork/1_models/03_directed_bn.yaml --repeat 3
+Tutti gli yaml di una cartella, in ordine (prompt dei comandi di Windows):
+```bat
+for %f in (configs\GPS\SocialNetwork\inductive\5_percentages_8_64\*.yaml) do python main.py --cfg %f
 ```
 
-Gli esperimenti dalla fase 2 in poi **non** usano `--repeat`: i 10 fold vengono eseguiti
-automaticamente grazie a `run_multiple_splits` nello yaml (le due opzioni non sono compatibili).
+Solo `02_directed_gine` e `03_directed_bn` usano `--repeat 3` (stesso split, 3 seed diversi).
+Tutti gli altri esperimenti eseguono automaticamente i 10 fold con `run_multiple_splits` nello yaml
+(le due opzioni non sono compatibili).
 
-I risultati vanno in `results/<nome yaml>/`. Media e deviazione standard sui fold sono in `agg/test/best.json`,
+Media e deviazione standard sui fold sono in `agg/test/best.json`,
 il report di classificazione di ogni fold in `<fold>/test/classification_report.xlsx`.
 
-> **Nota:** al primo lancio GraphGPS salva una copia dei dati in `datasets/SocialNetwork/processed/`.
-> Se rigeneri un `.pt` con gli script, cancella il file corrispondente in `processed/`
-> (per il dataset del tutor: `data_tutor-*.pt`), altrimenti continua a usare quello vecchio.
+> **Nota:** al primo lancio GraphGPS salva una copia dei dati in `datasets/SocialNetwork/processed/`
+> (ad esempio `data_ind-lp-r-8_fold1.pt`). Se rigeneri un `.pt` o un `graphs.pt` con gli script,
+> cancella i file corrispondenti in `processed/`, altrimenti GraphGPS continua a usare quelli vecchi.
 
-### File modificati rispetto a GraphGPS originale
-- `graphgps/loader/dataset/social_network.py`: classe del dataset
-- `graphgps/loader/master_loader.py`: registrazione del dataset `PyG-SocialNetwork`
+### File modificati o aggiunti rispetto a GraphGPS originale
+- `graphgps/loader/dataset/social_network.py`: classe del dataset (rete unica o reti separate per fold)
+- `graphgps/loader/master_loader.py`: registrazione del dataset `PyG-SocialNetwork`; niente `prepare_splits()` per i dataset `ind-`
+- `graphgps/loader/inductive_loader.py`: loader del setting induttivo (train e validation sulla rete di train, test sulla rete di test)
 - `graphgps/logger.py`: report per classe, MAE, RMSE e report binario sul test
 - `graphgps/train/custom_train.py`: salvataggio del report in Excel
-- `main.py`: 6 classi in uscita
+- `main.py`: 6 classi in uscita e loader induttivi per i dataset `ind-`
 
 
 
@@ -244,4 +267,3 @@ If you find this work useful, please cite our NeurIPS 2022 paper:
   year={2022}
 }
 ```
-

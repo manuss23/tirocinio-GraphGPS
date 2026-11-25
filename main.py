@@ -6,6 +6,7 @@ import logging
 import graphgps  # noqa, register custom modules
 from graphgps.agg_runs import agg_runs
 from graphgps.optimizer.extra_optimizers import ExtendedSchedulerConfig
+from graphgps.loader.inductive_loader import create_inductive_loaders
 
 from torch_geometric.graphgym.cmd_args import parse_args
 from torch_geometric.graphgym.config import (cfg, dump_cfg,
@@ -139,7 +140,10 @@ if __name__ == '__main__':
                      f"split_index={cfg.dataset.split_index}")
         logging.info(f"    Starting now: {datetime.datetime.now()}")
         # Set machine learning pipeline
-        loaders = create_loader()
+        if cfg.dataset.format == 'PyG-SocialNetwork' and cfg.dataset.name.startswith('ind-'):
+            loaders = create_inductive_loaders()
+        else:
+            loaders = create_loader()
         
         if cfg.dataset.format == 'PyG-SocialNetwork':
             cfg.share.dim_out = 6
